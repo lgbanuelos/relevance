@@ -20,6 +20,7 @@ public class Relevance {
         for (XTrace trace: log) {
             Integer curr = initialState;
             boolean nonfitting = false;
+            infoGatherer.openTrace(trace);
             for (XEvent event: trace) {
                 if (event.getAttributes().get("concept:name") == null)
                     continue;
