@@ -1,5 +1,6 @@
 package org.jbpt.pm.relevance;
 
+import com.google.common.collect.Table;
 import org.apache.commons.lang3.tuple.Pair;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
@@ -102,22 +103,23 @@ public class Relevance {
                     accumulated_prob_fitting_traces += traceFreq / totalNumberOfTraces;
             }
 
-            if (full)
-                return Map.of(
-                        "numberOfTraces", totalNumberOfTraces,
-                        "numberOfNonFittingTraces", totalNumberOfNonFittingTraces,
-                        "coverage", accumulated_prob_fitting_traces,
-                        "relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits,
-                        "costOfBackgroundModel", accumulated_temp_cost_bits
-                );
-            else
-                return Map.of("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits);
+            Map<String, Object> result = new HashMap<>();
+            if (full) {
+                result.put("numberOfTraces", totalNumberOfTraces);
+                result.put("numberOfNonFittingTraces", totalNumberOfNonFittingTraces);
+                result.put("coverage", accumulated_prob_fitting_traces);
+                result.put("costOfBackgroundModel", accumulated_temp_cost_bits);
+            }
+
+            result.put("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits);
+
+            return result;
         }
     }
 
     public static void scanAndProcess(XLog log, SAutomaton automaton, ReplayInformationGatherer infoGatherer) {
-        var transitions = automaton.getTransitions();
-        var initialState = automaton.getInitialState();
+        Table<Integer, String, Pair<Integer, Double>> transitions = automaton.getTransitions();
+        Integer initialState = automaton.getInitialState();
 
         for (XTrace trace: log) {
             Integer curr = initialState;
@@ -151,10 +153,8 @@ public class Relevance {
         Map<String, Object> result = new HashMap<>(analyzer.computeRelevance(full));
 
         if (full)
-            result.putAll(Map.of(
-                    "numberOfStates", automaton.getStates().size(),
-                    "numberOfTransitions", automaton.getTransitions().size()
-            ));
+            result.put("numberOfStates", automaton.getStates().size());
+            result.put("numberOfTransitions", automaton.getTransitions().size());
         return result;
     }
 
