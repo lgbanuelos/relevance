@@ -10,6 +10,7 @@ import org.jbpt.pm.relevance.utils.FDAG2Aut;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class Relevance {
 
@@ -22,7 +23,10 @@ public class Relevance {
             boolean nonfitting = false;
             infoGatherer.openTrace(trace);
             for (XEvent event: trace) {
-                if (event.getAttributes().get("concept:name") == null)
+                if (event.getAttributes().get("concept:name") == null || (
+                        event.getAttributes().containsKey("lifecycle:transition") &&
+                        !event.getAttributes().get("lifecycle:transition").toString().toUpperCase().equals("COMPLETE")
+                   ))
                     continue;
                 String label = event.getAttributes().get("concept:name").toString();
                 double prob = 0.0;
@@ -36,10 +40,10 @@ public class Relevance {
                 infoGatherer.processEvent(label, prob);
             }
 
-            if (!nonfitting && !transitions.contains(curr, "#"))
-                nonfitting = true;
-
-            infoGatherer.closeTrace(trace, !nonfitting);
+            if (!nonfitting && automaton.isFinalState(curr)) {
+                infoGatherer.closeTrace(trace, true, Optional.of(automaton.getFinalStateProb(curr)));
+            } else
+                infoGatherer.closeTrace(trace, false, Optional.empty());
         }
     }
 
