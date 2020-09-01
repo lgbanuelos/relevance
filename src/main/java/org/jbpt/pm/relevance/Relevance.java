@@ -1,5 +1,6 @@
 package org.jbpt.pm.relevance;
 
+import com.google.common.collect.Table;
 import org.apache.commons.lang3.tuple.Pair;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
@@ -15,8 +16,8 @@ import java.util.Optional;
 public class Relevance {
 
     public static void scanAndProcess(XLog log, SAutomaton automaton, ReplayInformationGatherer infoGatherer) {
-        var transitions = automaton.getTransitions();
-        var initialState = automaton.getInitialState();
+        Table<Integer, String, Pair<Integer, Double>> transitions = automaton.getTransitions();
+        Integer initialState = automaton.getInitialState();
 
         for (XTrace trace: log) {
             Integer curr = initialState;
@@ -52,11 +53,10 @@ public class Relevance {
         scanAndProcess(log, automaton, analyzer);
         Map<String, Object> result = new HashMap<>(analyzer.computeRelevance(full));
 
-        if (full)
-            result.putAll(Map.of(
-                    "numberOfStates", automaton.getStates().size(),
-                    "numberOfTransitions", automaton.getTransitions().size()
-            ));
+        if (full) {
+            result.put("numberOfStates", automaton.getStates().size());
+            result.put("numberOfTransitions", automaton.getTransitions().size());
+        }
         return result;
     }
 

@@ -28,7 +28,7 @@ public class SAutomaton {
     }
 
     private SAutomaton complete() {
-        return complete(1e-4);
+        return complete(1e-6);
     }
 
     private SAutomaton complete(double epsilon) {

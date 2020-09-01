@@ -90,15 +90,14 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
                 accumulated_prob_fitting_traces += traceFreq / totalNumberOfTraces;
         }
 
-        if (full)
-            return Map.of(
-                    "numberOfTraces", totalNumberOfTraces,
-                    "numberOfNonFittingTraces", totalNumberOfNonFittingTraces,
-                    "coverage", accumulated_prob_fitting_traces,
-                    "relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits,
-                    "costOfBackgroundModel", accumulated_temp_cost_bits
-            );
-        else
-            return Map.of("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits);
+        Map<String, Object> result = new HashMap<>();
+        if (full) {
+            result.put("numberOfTraces", totalNumberOfTraces);
+            result.put("numberOfNonFittingTraces", totalNumberOfNonFittingTraces);
+            result.put("coverage", accumulated_prob_fitting_traces);
+            result.put("costOfBackgroundModel", accumulated_temp_cost_bits);
+        }
+        result.put("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits);
+        return result;
     }
 }
