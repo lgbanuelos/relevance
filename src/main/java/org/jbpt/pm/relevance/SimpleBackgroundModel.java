@@ -2,10 +2,7 @@ package org.jbpt.pm.relevance;
 
 import org.deckfour.xes.model.XTrace;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class SimpleBackgroundModel implements ReplayInformationGatherer {
 
@@ -43,11 +40,11 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
     }
 
     @Override
-    public void closeTrace(XTrace trace, boolean fitting) {
+    public void closeTrace(XTrace trace, boolean fitting, Optional<Double> finalStateProb) {
         traceSize.put(largeString, trace.size());
         totalNumberOfTraces++;
         if (fitting)
-            log2OfModelProbability.put(largeString, lprob / Math.log(2));
+            log2OfModelProbability.put(largeString, (lprob + finalStateProb.get()) / Math.log(2));
         else
             totalNumberOfNonFittingTraces++;
         traceFrequency.put(largeString, traceFrequency.getOrDefault(largeString, 0) + 1);
@@ -80,8 +77,10 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
             if (log2OfModelProbability.containsKey(traceString)) { // fitting trace!
                 cost_bits = -log2OfModelProbability.get(traceString);
                 accumulated_rho += traceFreq;
-            } else
-                nftrace_cost_bits = cost_bits = costBitsUnfittingTraces(traceString);
+            } else {
+                cost_bits = costBitsUnfittingTraces(traceString);
+                nftrace_cost_bits = cost_bits;
+            }
 
             accumulated_temp_cost_bits += nftrace_cost_bits * traceFreq;
 
@@ -91,15 +90,14 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
                 accumulated_prob_fitting_traces += traceFreq / totalNumberOfTraces;
         }
 
-        if (full)
-            return Map.of(
-                    "numberOfTraces", totalNumberOfTraces,
-                    "numberOfNonFittingTraces", totalNumberOfNonFittingTraces,
-                    "coverage", accumulated_prob_fitting_traces,
-                    "relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits,
-                    "costOfBackgroundModel", accumulated_temp_cost_bits
-            );
-        else
-            return Map.of("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits);
+        Map<String, Object> result = new HashMap<>();
+        if (full) {
+            result.put("numberOfTraces", totalNumberOfTraces);
+            result.put("numberOfNonFittingTraces", totalNumberOfNonFittingTraces);
+            result.put("coverage", accumulated_prob_fitting_traces);
+            result.put("costOfBackgroundModel", accumulated_temp_cost_bits);
+        }
+        result.put("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits);
+        return result;
     }
 }

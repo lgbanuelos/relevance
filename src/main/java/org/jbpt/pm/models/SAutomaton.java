@@ -5,30 +5,60 @@ import com.google.common.collect.Table;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SAutomaton {
     private final Integer initialState;
-    private final Table<Integer, String, Pair<Integer, Double>> transitions;
-    private final Set<Integer> states;
+    private final List<SATransition> transitions;
 
-    SAutomaton(Table<Integer, String, Pair<Integer, Double>> transitions, Set<Integer> states, Integer initialState) {
-        this.transitions = transitions;
+    private transient Set<Integer> states;
+    private transient Table<Integer, String, Pair<Integer, Double>> transTable;
+    private transient Map<Integer, Double> finalStates;
+
+    SAutomaton(List<SATransition> saTransitions, Integer initialState) {
+        this.transitions = saTransitions;
         this.initialState = initialState;
-        this.states = states;
+        complete();
     }
 
-    public static SAutomaton of(List<SATransition> saTransitions, Set<Integer> saStates, Integer initialState) {
-        Table<Integer, String, Pair<Integer, Double>> transitions = HashBasedTable.create();
-        for (SATransition stTransition: saTransitions)
-            transitions.put(stTransition.getFrom(), stTransition.getLabel(), Pair.of(stTransition.getTo(), Math.log(stTransition.getProb())));
-        return new SAutomaton(transitions, saStates, initialState);
+    private SAutomaton complete() {
+        return complete(1e-6);
+    }
+
+    private SAutomaton complete(double epsilon) {
+        Table<Integer, String, Pair<Integer, Double>> table = HashBasedTable.create();
+        Set<Integer> stateSet = new HashSet<>();
+        Map<Integer, Double> outgoingProb = new HashMap<>();
+        Map<Integer, Double> sinkAbsorvingProb = new HashMap<>();
+
+        for (SATransition stTransition: transitions) {
+            table.put(stTransition.getFrom(), stTransition.getLabel(), Pair.of(stTransition.getTo(), Math.log(stTransition.getProb())));
+            stateSet.add(stTransition.getFrom());
+            stateSet.add(stTransition.getTo());
+            outgoingProb.put(stTransition.getFrom(), outgoingProb.getOrDefault(stTransition.getFrom(), 0.0) + stTransition.getProb());
+        }
+
+        for (Integer state: stateSet) {
+            if (!outgoingProb.containsKey(state) || 1.0 - outgoingProb.get(state) > epsilon)
+                sinkAbsorvingProb.put(state, Math.log(1.0 - outgoingProb.getOrDefault(state, 0.0)));
+        }
+
+        finalStates = sinkAbsorvingProb;
+
+        transTable = table;
+        states = stateSet;
+
+        return this;
+    }
+
+    public static SAutomaton of(List<SATransition> saTransitions, Integer initialState) {
+        return new SAutomaton(saTransitions, initialState);
     }
 
     public Integer getInitialState() {
@@ -36,7 +66,7 @@ public class SAutomaton {
     }
 
     public Table<Integer, String, Pair<Integer, Double>> getTransitions() {
-        return transitions;
+        return transTable;
     }
 
     public Set<Integer> getStates() {
@@ -45,25 +75,25 @@ public class SAutomaton {
 
     public static SAutomaton readJSON(String fileName) throws Exception {
         JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(fileName), "UTF-8"));
-        Gson gson = new GsonBuilder().create();
+        Gson gson = new Gson();
+        SAutomaton automaton = gson.fromJson(reader, SAutomaton.class);
+        automaton.complete();
 
-        Table<Integer, String, Pair<Integer, Double>> transitions = HashBasedTable.create();
-        Set<Integer> states = new HashSet<>();
-        Set<Integer> targets = new HashSet<>();
+        return automaton;
+    }
+    public void toJSON(String filename) throws Exception {
+        FileWriter writer = new FileWriter(filename);
+        Gson gson = new Gson();
+        IOUtils.write(gson.toJson(this), writer);
+        writer.flush();
+        writer.close();
+    }
 
-        reader.beginArray();
-        while (reader.hasNext()) {
-            SATransition stTransition = gson.fromJson(reader, SATransition.class);
-            transitions.put(stTransition.getFrom(), stTransition.getLabel(), Pair.of(stTransition.getTo(), Math.log(stTransition.getProb())));
-            states.add(stTransition.getFrom());
-            states.add(stTransition.getTo());
-            targets.add(stTransition.getTo());
-        }
-        reader.close();
+    public boolean isFinalState(Integer state) {
+        return finalStates.containsKey(state);
+    }
 
-        Set<Integer> sources = new HashSet<>(states);
-        sources.removeAll(targets);
-
-        return new SAutomaton(transitions, states, sources.iterator().next()); // There should be only one initial state
+    public double getFinalStateProb(Integer state) {
+        return finalStates.get(state);
     }
 }

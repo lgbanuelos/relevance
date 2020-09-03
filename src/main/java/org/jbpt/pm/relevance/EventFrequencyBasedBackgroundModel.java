@@ -2,10 +2,7 @@ package org.jbpt.pm.relevance;
 
 import org.deckfour.xes.model.XTrace;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
     Map<String, Integer> eventFrequency = new HashMap<>();
@@ -25,8 +22,8 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
     }
 
     @Override
-    public void closeTrace(XTrace trace, boolean fitting) {
-        super.closeTrace(trace, fitting);
+    public void closeTrace(XTrace trace, boolean fitting, Optional<Double> finalStateProb) {
+        super.closeTrace(trace, fitting, finalStateProb);
         if (!trace2eventLabels.containsKey(largeString))
             trace2eventLabels.put(largeString, events);
     }

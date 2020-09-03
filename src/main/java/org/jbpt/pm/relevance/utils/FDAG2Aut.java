@@ -32,13 +32,18 @@ public class FDAG2Aut {
         List<SATransition> transitions = new ArrayList<>();
 
         for (FDAGArc arc: dfg.getArcs()) {
-            String label = sinks.contains(arc.getTo()) ? "#" : nodeInfo.get(arc.getTo());
-            transitions.add(new SATransition(
-                    arc.getFrom(), arc.getTo(), label,
-                    (double) arc.getFreq() / aggregateOutgoingFrequency.get(arc.getFrom())
-            ));
+            if (!sinks.contains((arc.getTo()))) {
+                String label = nodeInfo.get(arc.getTo());
+                transitions.add(new SATransition(
+                        arc.getFrom(), arc.getTo(), label,
+                        (double) arc.getFreq() / aggregateOutgoingFrequency.get(arc.getFrom())
+                ));
+            }
         }
 
-        return SAutomaton.of(transitions, nodeInfo.keySet(), sources.iterator().next());
+        for (Integer sink: sinks)
+            nodeInfo.remove(sink);
+
+        return SAutomaton.of(transitions, sources.iterator().next());
     }
 }
