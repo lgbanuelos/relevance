@@ -5,27 +5,27 @@ import org.deckfour.xes.model.XTrace;
 import java.util.*;
 
 public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
-    Map<String, Integer> eventFrequency = new HashMap<>();
-    Map<String, List<String>> trace2eventLabels = new HashMap<>();
-    List<String> events;
+    Map<String, Integer> n_a_E = new HashMap<>();
+    Map<String, Map<String, Integer>> n_a_t = new HashMap<>();
+    Map<String, Integer> eventFrequency;
 
     @Override
     public void openTrace(XTrace trace) {
-        events = new ArrayList<>();
+        eventFrequency = new HashMap<>();
     }
 
     @Override
     public void processEvent(String eventLabel, double probability) {
         super.processEvent(eventLabel, probability);
+        n_a_E.put(eventLabel, n_a_E.getOrDefault(eventLabel, 0) + 1);
         eventFrequency.put(eventLabel, eventFrequency.getOrDefault(eventLabel, 0) + 1);
-        events.add(eventLabel);
     }
 
     @Override
     public void closeTrace(XTrace trace, boolean fitting, Optional<Double> finalStateProb) {
         super.closeTrace(trace, fitting, finalStateProb);
-        if (!trace2eventLabels.containsKey(largeString))
-            trace2eventLabels.put(largeString, events);
+        if (!n_a_t.containsKey(largeString))
+            n_a_t.put(largeString, eventFrequency);
     }
 
     protected double costBitsUnfittingTraces(String traceId) {
