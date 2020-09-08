@@ -47,8 +47,6 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 	@Override
 	public void closeTrace(XTrace trace, boolean fitting, Optional<Double> finalStateProb) {
 		super.closeTrace(trace, fitting, finalStateProb);
-		this.lengthOfE = this.nonFittingSubLog ? totalNumberOfNonFittingTraces : totalNumberOfTraces;
-
 		if (!n_a_t.containsKey(largeString))
 			n_a_t.put(largeString, eventFrequency);
 
@@ -68,6 +66,7 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 
 	@Override
 	protected double costBitsUnfittingTraces(String traceId) {
+		this.lengthOfE = this.nonFittingSubLog ? totalNumberOfNonFittingTraces : totalNumberOfTraces;
 		double bits = 0.0;
 		
 		for (Entry<String, Integer> eventFrequency : n_a_t.get(traceId).entrySet())
