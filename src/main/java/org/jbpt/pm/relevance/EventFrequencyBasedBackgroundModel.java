@@ -66,9 +66,9 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 
 	@Override
 	protected double costBitsUnfittingTraces(String traceId) {
-		this.lengthOfE = this.nonFittingSubLog ? totalNumberOfNonFittingTraces : totalNumberOfTraces;
 		double bits = 0.0;
-		
+		this.lengthOfE = this.nonFittingSubLog ? totalNumberOfNonFittingTraces : totalNumberOfTraces;
+
 		for (Entry<String, Integer> eventFrequency : n_a_t.get(traceId).entrySet())
 			bits -= log2(p(eventFrequency.getKey(), n_a_E)) * eventFrequency.getValue();
 		
