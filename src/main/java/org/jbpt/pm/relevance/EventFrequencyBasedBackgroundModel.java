@@ -10,7 +10,7 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 	Map<String, Integer> n_a_E = new HashMap<>();
 	Map<String, Map<String, Integer>> n_a_t = new HashMap<>();
 	Map<String, Integer> eventFrequency;
-	
+
 	boolean nonFittingSubLog;
 	int lengthOfE = 0;
 
@@ -37,10 +37,6 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 	@Override
 	public void processEvent(String eventLabel, double probability) {
 		super.processEvent(eventLabel, probability);
-		
-		if (!this.nonFittingSubLog)
-			n_a_E.put(eventLabel, n_a_E.getOrDefault(eventLabel, 0) + 1);
-		
 		eventFrequency.put(eventLabel, eventFrequency.getOrDefault(eventLabel, 0) + 1);
 	}
 
@@ -50,10 +46,14 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 		if (!n_a_t.containsKey(largeString))
 			n_a_t.put(largeString, eventFrequency);
 
-		if (this.nonFittingSubLog)
+		if (this.nonFittingSubLog) {
 			if (!fitting)
 				for (Entry<String, Integer> eventLabel : eventFrequency.entrySet())
 					n_a_E.put(eventLabel.getKey(), n_a_E.getOrDefault(eventLabel.getKey(), 0) + eventLabel.getValue());
+		} else {
+			for (Entry<String, Integer> eventLabel : eventFrequency.entrySet())
+				n_a_E.put(eventLabel.getKey(), n_a_E.getOrDefault(eventLabel.getKey(), 0) + eventLabel.getValue());
+		}
 	}
 
 	protected int logHatLength(Map<String, Integer> logHat) {
@@ -71,7 +71,6 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 
 		for (Entry<String, Integer> eventFrequency : n_a_t.get(traceId).entrySet())
 			bits -= log2(p(eventFrequency.getKey(), n_a_E)) * eventFrequency.getValue();
-		
 		bits -= log2(lengthOfE / (double) logHatLength(n_a_E));
 		return bits;
 	}
