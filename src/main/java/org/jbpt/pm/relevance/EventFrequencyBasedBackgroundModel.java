@@ -7,12 +7,12 @@ import java.util.Map.Entry;
 
 public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 
-	Map<String, Integer> n_a_E = new HashMap<>();
-	Map<String, Map<String, Integer>> n_a_t = new HashMap<>();
-	Map<String, Integer> eventFrequency;
+	Map<String, Integer> freqActionInLog = new HashMap<>(); // action in a log
+	Map<String, Map<String, Integer>> freqActionInTrace = new HashMap<>(); // action in trace 
+	Map<String, Integer> actionFrequency;
 
 	boolean nonFittingSubLog;
-	int lengthOfE = 0;
+	int lengthOfLog = 0;
 
 	/**
 	 * A constructor of the class.
@@ -31,33 +31,33 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 	@Override
 	public void openTrace(XTrace trace) {
 		super.openTrace(trace);
-		eventFrequency = new HashMap<>();
+		actionFrequency = new HashMap<>();
 	}
 
 	@Override
 	public void processEvent(String eventLabel, double probability) {
 		super.processEvent(eventLabel, probability);
-		eventFrequency.put(eventLabel, eventFrequency.getOrDefault(eventLabel, 0) + 1);
+		
+		if (!this.nonFittingSubLog)
+			freqActionInLog.put(eventLabel, freqActionInLog.getOrDefault(eventLabel, 0) + 1);
+		
+		actionFrequency.put(eventLabel, actionFrequency.getOrDefault(eventLabel, 0) + 1);
 	}
 
 	@Override
 	public void closeTrace(XTrace trace, boolean fitting, Optional<Double> finalStateProb) {
 		super.closeTrace(trace, fitting, finalStateProb);
-		if (!n_a_t.containsKey(largeString))
-			n_a_t.put(largeString, eventFrequency);
+		if (!freqActionInTrace.containsKey(largeString))
+			freqActionInTrace.put(largeString, actionFrequency);
 
-		if (this.nonFittingSubLog) {
+		if (this.nonFittingSubLog)
 			if (!fitting)
-				for (Entry<String, Integer> eventLabel : eventFrequency.entrySet())
-					n_a_E.put(eventLabel.getKey(), n_a_E.getOrDefault(eventLabel.getKey(), 0) + eventLabel.getValue());
-		} else {
-			for (Entry<String, Integer> eventLabel : eventFrequency.entrySet())
-				n_a_E.put(eventLabel.getKey(), n_a_E.getOrDefault(eventLabel.getKey(), 0) + eventLabel.getValue());
-		}
+				for (Entry<String, Integer> eventLabel : actionFrequency.entrySet())
+					freqActionInLog.put(eventLabel.getKey(), freqActionInLog.getOrDefault(eventLabel.getKey(), 0) + eventLabel.getValue());
 	}
 
 	protected int logHatLength(Map<String, Integer> logHat) {
-		return logHat.values().stream().mapToInt(i -> i).sum() + lengthOfE;
+		return logHat.values().stream().mapToInt(i -> i).sum() + lengthOfLog;
 	}
 
 	protected double p(String element, Map<String, Integer> logHat) {
@@ -67,12 +67,24 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 	@Override
 	protected double costBitsUnfittingTraces(String traceId) {
 		double bits = 0.0;
-		this.lengthOfE = this.nonFittingSubLog ? totalNumberOfNonFittingTraces : totalNumberOfTraces;
-
-		for (Entry<String, Integer> eventFrequency : n_a_t.get(traceId).entrySet())
-			bits -= log2(p(eventFrequency.getKey(), n_a_E)) * eventFrequency.getValue();
-		bits -= log2(lengthOfE / (double) logHatLength(n_a_E));
+		this.lengthOfLog = this.nonFittingSubLog ? totalNumberOfNonFittingTraces : totalNumberOfTraces;
+	
+		for (Entry<String, Integer> eventFrequency : freqActionInTrace.get(traceId).entrySet())
+			bits -= log2(p(eventFrequency.getKey(), freqActionInLog)) * eventFrequency.getValue();
+		bits -= log2(lengthOfLog / (double) logHatLength(freqActionInLog));
 		return bits;
 	}
 
+	@Override
+	protected double costDistribution() {
+		//\sum_x ( 2 \floor(\log_2 (x+1)) + 1)
+		final long[] result = {0};
+		freqActionInLog.values().forEach(v -> result[0] += (2*Math.floor(log2(v+1))+1)); //cost of frequency distribution of actions
+		result[0] +=  (2*Math.floor(log2(lengthOfLog+1))+1);//cost of frequency distribution of end-of-trace symbols.
+
+		System.out.println(freqActionInLog);
+		System.out.println(lengthOfLog);
+		System.out.println(result[0]);
+	        return result[0];
+	    }
 }

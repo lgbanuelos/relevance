@@ -61,6 +61,10 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
     protected double costBitsUnfittingTraces(String traceId) {
         return (1 + traceSize.get(traceId)) * log2( 1 + labels.size() );
     }
+    
+    protected double costDistribution() {
+        return 0;
+    }
 
     public Map<String, Object> computeRelevance(boolean full) {
         int accumulated_rho = 0;
@@ -97,7 +101,7 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
             result.put("coverage", accumulated_prob_fitting_traces);
             result.put("costOfBackgroundModel", accumulated_temp_cost_bits);
         }
-        result.put("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits);
+        result.put("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits + costDistribution());
         return result;
     }
 }

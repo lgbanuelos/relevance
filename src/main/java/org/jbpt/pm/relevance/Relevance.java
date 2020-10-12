@@ -49,7 +49,7 @@ public class Relevance {
     }
 
     public static Map<String, Object> compute(XLog log, SAutomaton automaton, boolean full) {
-        SimpleBackgroundModel analyzer = new SimpleBackgroundModel();
+        SimpleBackgroundModel analyzer = new EventFrequencyBasedBackgroundModel(false);
         scanAndProcess(log, automaton, analyzer);
         Map<String, Object> result = new HashMap<>(analyzer.computeRelevance(full));
 
