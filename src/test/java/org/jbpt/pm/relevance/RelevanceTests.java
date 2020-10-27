@@ -72,9 +72,9 @@ public class RelevanceTests {
 //    }
     @Test
     public void testExample() throws Exception {
-        XLog log = XLogReader.openLog("logs/exampleLog_02.xes");
-        SAutomaton automaton = SAutomaton.readJSON("automata/exampleAut_02.json");
-        System.out.println(Relevance.compute(log, automaton, true));
+        XLog log = XLogReader.openLog("C:\\Users\\halkhammash\\Desktop\\myPhD\\relevenaceTest\\logs\\Sepsis_Cases.xes");
+        FDAGraph dfg = FDAGraph.readJSON("C:\\Users\\halkhammash\\Desktop\\myPhD\\relevenaceTest\\Apromore\\DFG\\Sepsis_Cases\\Sepsis_Cases_0.9_0.9.json");
+        System.out.println(Relevance.compute(log, dfg, true));
     }
 	
 }

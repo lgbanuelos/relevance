@@ -62,8 +62,8 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
         return (1 + traceSize.get(traceId)) * log2( 1 + labels.size() );
     }
     
-    protected double costDistribution() {
-        return 0;
+    protected double costFrequencyDistribution() {
+         return 0;
     }
 
     public Map<String, Object> computeRelevance(boolean full) {
@@ -71,6 +71,7 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
         double accumulated_cost_bits = 0;
         double accumulated_temp_cost_bits = 0;
         double accumulated_prob_fitting_traces = 0;
+        double costFreqDistribuPerTrace = 0;
 
         for (String traceString: traceFrequency.keySet()) {
             double traceFreq = traceFrequency.get(traceString);
@@ -81,27 +82,34 @@ public class SimpleBackgroundModel implements ReplayInformationGatherer {
             if (log2OfModelProbability.containsKey(traceString)) { // fitting trace!
                 cost_bits = -log2OfModelProbability.get(traceString);
                 accumulated_rho += traceFreq;
+
             } else {
                 cost_bits = costBitsUnfittingTraces(traceString);
                 nftrace_cost_bits = cost_bits;
             }
 
             accumulated_temp_cost_bits += nftrace_cost_bits * traceFreq;
-
             accumulated_cost_bits += (cost_bits * traceFreq) / totalNumberOfTraces;
 
             if (log2OfModelProbability.containsKey(traceString))
                 accumulated_prob_fitting_traces += traceFreq / totalNumberOfTraces;
         }
+        
+        costFreqDistribuPerTrace = costFrequencyDistribution()/totalNumberOfTraces;
 
         Map<String, Object> result = new HashMap<>();
+        
         if (full) {
             result.put("numberOfTraces", totalNumberOfTraces);
             result.put("numberOfNonFittingTraces", totalNumberOfNonFittingTraces);
             result.put("coverage", accumulated_prob_fitting_traces);
             result.put("costOfBackgroundModel", accumulated_temp_cost_bits);
+    		result.put("sizeOfAlphabet",labels.size());
+    		result.put("sizeOfAugmentedAlphabet",labels.size()+1);
+    		result.put("costOfFrequencyDistribution", costFreqDistribuPerTrace);
         }
-        result.put("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits + costDistribution());
+        result.put("relevance", h0(accumulated_rho, totalNumberOfTraces) + accumulated_cost_bits  + costFreqDistribuPerTrace);
+        
         return result;
     }
 }
