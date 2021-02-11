@@ -9,7 +9,7 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 
 	Map<String, Integer> freqActionInLog = new HashMap<>(); // actions in a log (non-fitting log)
 	Map<String, Map<String, Integer>> freqActionInTrace = new HashMap<>(); // actions in a trace
-	Map<String, Integer> actionFrequency;
+	Map<String, Integer> tempFreqActionInLog;
 
 	boolean nonFittingSubLog;
 	int lengthOfLog = 0;
@@ -29,7 +29,7 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 	@Override
 	public void openTrace(XTrace trace) {
 		super.openTrace(trace);
-		actionFrequency = new HashMap<>();
+		tempFreqActionInLog = new HashMap<>();
 	}
 
 	@Override
@@ -39,29 +39,31 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 		if (!this.nonFittingSubLog)
 			freqActionInLog.put(eventLabel, freqActionInLog.getOrDefault(eventLabel, 0) + 1);
 
-		actionFrequency.put(eventLabel, actionFrequency.getOrDefault(eventLabel, 0) + 1);
+		tempFreqActionInLog.put(eventLabel, tempFreqActionInLog.getOrDefault(eventLabel, 0) + 1);
 	}
 
 	@Override
 	public void closeTrace(XTrace trace, boolean fitting, Optional<Double> finalStateProb) {
 		super.closeTrace(trace, fitting, finalStateProb);
-		
-		if (!freqActionInTrace.containsKey(largeString))
-			freqActionInTrace.put(largeString, actionFrequency);
 
-		if (this.nonFittingSubLog)
+		if (!freqActionInTrace.containsKey(largeString))
+			freqActionInTrace.put(largeString, tempFreqActionInLog);
+
+		if (this.nonFittingSubLog) {
 			if (!fitting)
-				for (Entry<String, Integer> eventLabel : actionFrequency.entrySet())
+				for (Entry<String, Integer> eventLabel : tempFreqActionInLog.entrySet())
 					freqActionInLog.put(eventLabel.getKey(),
 							freqActionInLog.getOrDefault(eventLabel.getKey(), 0) + eventLabel.getValue());
+		}
 	}
 
-	protected int logHatLength(Map<String, Integer> logHat) {
-		return logHat.values().stream().mapToInt(i -> i).sum() + lengthOfLog;
+	protected int actionsInLog(Map<String, Integer> freqActionInLog) { // number of actions + #s in the log
+		return freqActionInLog.values().stream().mapToInt(i -> i).sum() + this.lengthOfLog;
 	}
 
-	protected double p(String element, Map<String, Integer> logHat) {
-		return logHat.get(element) / (double) logHatLength(logHat);
+	protected double p(String element, Map<String, Integer> freqActionInLog) { // probability of an action or # in the
+																				// log
+		return freqActionInLog.get(element) / (double) actionsInLog(freqActionInLog);
 	}
 
 	@Override
@@ -70,22 +72,23 @@ public class EventFrequencyBasedBackgroundModel extends SimpleBackgroundModel {
 		this.lengthOfLog = this.nonFittingSubLog ? totalNumberOfNonFittingTraces : totalNumberOfTraces;
 
 		for (Entry<String, Integer> eventFrequency : freqActionInTrace.get(traceId).entrySet())
-			bits -= log2(p(eventFrequency.getKey(), freqActionInLog)) * eventFrequency.getValue(); // for actions
-		
-		bits -= log2(lengthOfLog / (double) logHatLength(freqActionInLog)); // for hashes
-		
+			bits -= log2(p(eventFrequency.getKey(), freqActionInLog)) * eventFrequency.getValue(); // compute cost of
+																									// actions in a
+																									// trace
+		bits -= log2(this.lengthOfLog / (double) actionsInLog(freqActionInLog)); // compute cost of hashes in the trace
+
 		return bits;
 	}
 
 	@Override
 	protected double costFrequencyDistribution() {
-		double bits=0.0;
-		
-		for(String label : labels) 
-			bits += 2 * Math.floor(log2(freqActionInLog.getOrDefault(label, 0) + 1)) + 1; // for actions
-		
-		bits += 2 * Math.floor(log2(lengthOfLog + 1)) + 1; // for hashes
-						
+		double bits = 0.0;
+		this.lengthOfLog = this.nonFittingSubLog ? totalNumberOfNonFittingTraces : totalNumberOfTraces;
+
+		for (String label : labels)
+			bits += (2 * Math.floor(log2(freqActionInLog.getOrDefault(label, 0) + 1)) + 1); // cost of disfor actions
+		bits += (2 * Math.floor(log2(this.lengthOfLog + 1)) + 1); // for hashes
+
 		return bits;
 	}
 }

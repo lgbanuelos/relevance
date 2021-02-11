@@ -64,17 +64,16 @@ public class RelevanceTests {
 //        System.out.println(Relevance.compute(log, automaton, true));
 //    }
 //
-//    @Test
-//    public void testICPM_Fig6_E2() throws Exception {
-//        XLog log = XLogReader.openLog("logs/icpm2020_E2.xes");
-//        SAutomaton automaton = SAutomaton.readJSON("automata/icpm2020_fig6.sdfa");
-//        System.out.println(Relevance.compute(log, automaton, true));
-//    }
     @Test
-    public void testExample() throws Exception {
-        XLog log = XLogReader.openLog("C:\\Users\\halkhammash\\Desktop\\myPhD\\relevenaceTest\\logs\\Sepsis_Cases.xes");
-        FDAGraph dfg = FDAGraph.readJSON("C:\\Users\\halkhammash\\Desktop\\myPhD\\relevenaceTest\\Apromore\\DFG\\Sepsis_Cases\\Sepsis_Cases_0.9_0.9.json");
-        System.out.println(Relevance.compute(log, dfg, true));
+    public void testICPM_Fig6_E2() throws Exception {
+        XLog log = XLogReader.openLog("logs\\IS2021_E2.xes");
+        SAutomaton automaton = SAutomaton.readJSON("automata\\IS2021-aut2.sdfa");
+        System.out.println(Relevance.compute(log, automaton, true));
     }
-	
+//    @Test
+//    public void testExample() throws Exception {
+//        XLog log = XLogReader.openLog("logs\\IS2021_E2-.xes");
+//        FDAGraph dfg = FDAGraph.readJSON("dfgs\\IS2021_fig5.json");
+//        System.out.println(Relevance.compute(log, dfg, true));
+//    }	
 }
