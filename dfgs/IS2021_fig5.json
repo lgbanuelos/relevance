@@ -1,0 +1,30 @@
+{
+	"nodes": [
+		{"label":"Process Start", "freq": 256, "id":  1},
+		{"label":"a", "freq": 192, "id":  2},
+		{"label":"b", "freq": 96, "id":  3},
+		{"label":"c", "freq": 24, "id":  4},
+        {"label":"d", "freq": 8, "id":  5},
+        {"label":"e", "freq": 28, "id":  6},
+		{"label":"f", "freq": 6, "id":  7},
+		{"label":"Process End", "freq": 256, "id":  8}
+	],
+	"arcs": [
+		{"from":1,"to":2,"freq":192},
+		{"from":1,"to":8,"freq":64},
+		{"from":2,"to":3,"freq":96},
+        {"from":2,"to":8,"freq":96},
+        {"from":3,"to":4,"freq":24},
+		{"from":3,"to":6,"freq":24},
+        {"from":3,"to":8,"freq":48},
+        {"from":4,"to":5,"freq":6},
+        {"from":4,"to":7,"freq":6},
+        {"from":4,"to":8,"freq":12},
+        {"from":5,"to":6,"freq":4},
+        {"from":5,"to":8,"freq":4},
+		{"from":6,"to":8,"freq":28},
+        {"from":7,"to":5,"freq":2},
+        {"from":7,"to":7,"freq":2},
+		{"from":7,"to":8,"freq":4}
+	]
+}

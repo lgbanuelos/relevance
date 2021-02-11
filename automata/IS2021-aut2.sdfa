@@ -1,0 +1,10 @@
+{"initialState":1,"transitions":
+[{"from":1,"to":2,"label":"a","prob":0.75},
+{"from":2,"to":3,"label":"b","prob":0.5},
+{"from":3,"to":4,"label":"c","prob":0.25},
+{"from":3,"to":6,"label":"e","prob":0.25},
+{"from":4,"to":5,"label":"d","prob":0.25},
+{"from":4,"to":7,"label":"f","prob":0.25},
+{"from":5,"to":6,"label":"e","prob":0.5},
+{"from":7,"to":5,"label":"d","prob":0.25},
+{"from":7,"to":7,"label":"f","prob":0.25}]}
