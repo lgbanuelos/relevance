@@ -1,0 +1,11 @@
+{
+  "initialState": 0,
+  "transitions": [
+    {"from":0,"to":0,"label":"a","prob":0.16},
+    {"from":0,"to":1,"label":"b","prob":0.16},
+    {"from":0,"to":2,"label":"d","prob":0.16},
+    {"from":1,"to":2,"label":"e","prob":1.0},
+    {"from":2,"to":0,"label":"b","prob":0.25},
+    {"from":2,"to":2,"label":"e","prob":0.25}
+  ]
+}
