@@ -68,7 +68,7 @@ public class RelevanceTests {
     public void testICPM_Fig6_E2() throws Exception {
         XLog log = XLogReader.openLog("logs\\IS2021_E2.xes");
         SAutomaton automaton = SAutomaton.readJSON("automata\\IS2021-aut2.sdfa");
-        System.out.println(Relevance.compute(log, automaton, true));
+        System.out.println(Relevance.computeNew(log, automaton, true, false));
     }
 //    @Test
 //    public void testExample() throws Exception {
